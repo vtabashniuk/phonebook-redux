@@ -1,10 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit';
+import { persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
 import { nanoid } from 'nanoid';
 
-const LS_Data = localStorage.getItem('contacts') ?? '[]';
-const contactList = JSON.parse(LS_Data) ?? [];
+const initialState = { contacts: [], filter: '' };
 
-const initialState = { contacts: contactList, filter: '' };
+const persistConfig = {
+  key: 'root',
+  storage,
+  whitelist: ['contacts'],
+};
 
 const phonebook = createSlice({
   name: 'phonebook',
@@ -13,7 +18,6 @@ const phonebook = createSlice({
     addContact: {
       reducer: (state, action) => {
         state.contacts.push(action.payload);
-        localStorage.setItem('contacts', JSON.stringify(state.contacts));
       },
       prepare: ({ name, number }) => {
         const id = nanoid(4);
@@ -37,6 +41,9 @@ const phonebook = createSlice({
   },
 });
 
-export const { addContact, deleteContact, filterContact } = phonebook.actions;
+export const phonebookReducer = persistReducer(
+  persistConfig,
+  phonebook.reducer
+);
 
-export const phonebookReducer = phonebook.reducer;
+export const { addContact, deleteContact, filterContact } = phonebook.actions;
